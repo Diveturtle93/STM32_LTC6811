@@ -209,19 +209,7 @@
 #define STCOMM						0b11100100011							// Start Communication I2C / SPI
 //----------------------------------------------------------------------
 
-// Definiere Statemaschine Typedefines
-//----------------------------------------------------------------------
-// Definiere IsoSpi States
-//----------------------------------------------------------------------
-typedef enum IsoSpiState_tag {
-	IsoIdle,																// Kommunikation unterbrochen
-	IsoReady,																// Kommunikation kann durchgefuehrt werden
-	IsoActive,																// Kommunikation wird durchgefuehrt
-	IsoGetReady,															// Kommunikation wird vorbereitet
-	IsoSleep,																// Kommunikation abgeschaltet
-} IsoSpi_State;
-//----------------------------------------------------------------------
-// Definiere LTC6811 States
+// Definiere LTC6811 Statemaschine Typedefines
 //----------------------------------------------------------------------
 typedef enum LTC6811State_tag {
 	LTCStandby,																// IC im Standby, Referenzspannung inaktiv, Beide Timer laufen
@@ -279,18 +267,6 @@ typedef union __ltc6811_balancing_tag {
 //----------------------------------------------------------------------
 
 // Funktionen definieren
-//----------------------------------------------------------------------
-// IsoSPI Funktionen
-//----------------------------------------------------------------------
-void set_IsoSpiState (IsoSpi_State newState);								// Setze neuen State von IsoSPI
-void IsoSPI_statemaschine (void);											// Auswertung State von IsoSPI
-IsoSpi_State get_IsoSpiState (void);											// Bekomme aktuellen State von IsoSPI
-void IsoSPI_wakeup (void);													// Aufwachfunktion fuer IsoSPI
-void IsoSPI_cmd (uint8_t* command);											// Sende Command ueber IsoSPI
-void IsoSPI_transmit (uint8_t* command, uint8_t* data);						// Sende Daten ueber IsoSPI
-void IsoSPI_read (uint8_t* command, uint8_t* data);							// Lese Daten ueber IsoSPI
-//----------------------------------------------------------------------
-// LTC Funktionen
 //----------------------------------------------------------------------
 void set_ltc6811_state (LTC6811_State newState);							// Setze neuen Stat von LTC6811
 void ltc6811_statemaschine (void);											// Auswertung State von LTC6811

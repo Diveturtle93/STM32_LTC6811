@@ -37,7 +37,6 @@
 // Definiere Debug Symbols
 //----------------------------------------------------------------------
 #ifdef DEBUG
-//	#define DEBUG_ISOSPI
 //	#define DEBUG_LTC6811
 //	#define DEBUG_LTC6811_PEC
 //	#define DEBUG_LTC6811_VALID_BALANCING

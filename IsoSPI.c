@@ -21,7 +21,7 @@
 // Einfuegen der eigenen Include Dateien
 //----------------------------------------------------------------------
 #include "LTC6811.h"
-#include "SPI_resource.h"
+#include "IsoSPI.h"
 #include "millis.h"
 //----------------------------------------------------------------------
 

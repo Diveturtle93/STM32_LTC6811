@@ -21,7 +21,10 @@
 // Einfuegen der eigenen Include Dateien
 //----------------------------------------------------------------------
 #include "ltc6811.h"
-#include "BatteriemanagementSystem.h"
+#include "IsoSPI.h"
+#include "error.h"
+#include "millis.h"
+#include "my_math.h"
 //----------------------------------------------------------------------
 
 // Definiere Zellenarray

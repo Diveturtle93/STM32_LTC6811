@@ -1,9 +1,8 @@
 //----------------------------------------------------------------------
-// Titel	:	IsoSPI.h
+// Titel	:	ltc1380.h
 //----------------------------------------------------------------------
 // Sprache	:	C
-// Datum	:	21.06.2026
-// Version	:	1.0
+// Datum	:	25.09.2020
 // Autor	:	Diveturtle93
 // Projekt	:	LTC6811
 // Quelle	:
@@ -16,13 +15,13 @@
 
 // Dateiheader definieren
 //----------------------------------------------------------------------
-#ifndef INC_ISOSPI_H_
-#define INC_ISOSPI_H_
+#ifndef INC_LTC1380_H_
+#define INC_LTC1380_H_
 //----------------------------------------------------------------------
 
 // Einfuegen der standard Include-Dateien
 //----------------------------------------------------------------------
-
+#include "inttypes.h"
 //----------------------------------------------------------------------
 
 // Einfuegen der STM Include-Dateien
@@ -30,59 +29,50 @@
 
 //----------------------------------------------------------------------
 
-// Einfuegen der eigenen Include Dateien
+// Einfuegen der eigenen Include-Dateien
 //----------------------------------------------------------------------
 
 //----------------------------------------------------------------------
 
-// Definiere Debug Symbols
+// Definiere Debug-Symbole
 //----------------------------------------------------------------------
 #ifdef DEBUG
-//	#define DEBUG_ISOSPI
+//	#define DEBUG_LTC1380
 #endif
 //----------------------------------------------------------------------
 
-// Version definieren
+// Konstanten definieren
 //----------------------------------------------------------------------
-#define ISOSPI_MAJOR					0
-#define ISOSPI_MINOR					0
-#define ISOSPI_PATCH					0
-#define ISOSPI_DEV					    0
+#define LTC1380_DEVICES							2							// Anzahl der ICs pro LTC6811
+#define LTC1380_SENSORES						8							// Anzahl der Sensoren pro IC
 //----------------------------------------------------------------------
 
-// Definiere ISO-SPI Enable Leitung, LTC6811
+// Addressen
 //----------------------------------------------------------------------
-#define ISOSPI_ENABLE() (HAL_GPIO_WritePin(ISOSPI_EN_GPIO_Port, ISOSPI_EN_Pin, GPIO_PIN_SET))		// Iso SPI enable
-#define ISOSPI_DISABLE() (HAL_GPIO_WritePin(ISOSPI_EN_GPIO_Port, ISOSPI_EN_Pin, GPIO_PIN_RESET))	// Iso SPI disable
-//----------------------------------------------------------------------
-
-// Definiere Chip-Select Leitung, LTC6811
-//----------------------------------------------------------------------
-#define ISOCS_ENABLE() (HAL_GPIO_WritePin(ISOSPI_CS_GPIO_Port, ISOSPI_CS_Pin, GPIO_PIN_RESET))		// Chip-Select enable
-#define ISOCS_DISABLE() (HAL_GPIO_WritePin(ISOSPI_CS_GPIO_Port, ISOSPI_CS_Pin, GPIO_PIN_SET))		// Chip-Select disable
+#define LTC1380_MUX0							0b10010000					// Adresse fue IC 1
+#define LTC1380_MUX1							0b10010010					// Adresse fue IC 2
+#define LTC1380_MUX2							0b10010100					// Adresse fue IC 3
+#define LTC1380_MUX3							0b10010110					// Adresse fue IC 4
 //----------------------------------------------------------------------
 
-// Definiere IsoSpi Statemaschine Typedefines
+// Channel Auswahl
 //----------------------------------------------------------------------
-typedef enum IsoSpiState_tag {
-	IsoIdle,																// Kommunikation unterbrochen
-	IsoReady,																// Kommunikation kann durchgefuehrt werden
-	IsoActive,																// Kommunikation wird durchgefuehrt
-	IsoGetReady,															// Kommunikation wird vorbereitet
-	IsoSleep,																// Kommunikation abgeschaltet
-} IsoSpi_State;
+#define TEMPERATUR0								0							// Kanal 1 am IC
+#define TEMPERATUR1								1							// Kanal 2 am IC
+#define TEMPERATUR2								2							// Kanal 3 am IC
+#define TEMPERATUR3								3							// Kanal 4 am IC
+#define TEMPERATUR4								4							// Kanal 5 am IC
+#define TEMPERATUR5								5							// Kanal 6 am IC
+#define TEMPERATUR6								6							// Kanal 7 am IC
+#define TEMPERATUR7								7							// Kanal 8 am IC
 //----------------------------------------------------------------------
 
 // Funktionen definieren
 //----------------------------------------------------------------------
-void set_IsoSpiState (IsoSpi_State newState);								// Setze neuen State von IsoSPI
-void IsoSPI_statemaschine (void);											// Auswertung State von IsoSPI
-IsoSpi_State get_IsoSpiState (void);										// Bekomme aktuellen State von IsoSPI
-void IsoSPI_wakeup (void);													// Aufwachfunktion fuer IsoSPI
-void IsoSPI_cmd (uint8_t* command);											// Sende Command ueber IsoSPI
-void IsoSPI_transmit (uint8_t* command, uint8_t* data);						// Sende Daten ueber IsoSPI
-void IsoSPI_read (uint8_t* command, uint8_t* data);							// Lese Daten ueber IsoSPI
+void ltc1380_write (uint8_t Address, uint8_t Channel);						// Kanal eines ICs auswaehlen
+void ltc1380_off (uint8_t Address);											// Alle Kanaele eines ICs ausschalten
+void ltc1380_alloff (void);													// Alle Kanaele aller ICs ausschalten
 //----------------------------------------------------------------------
 
-#endif /* INC_ISOSPI_H_ */
+#endif /* INC_LTC1380_H_ */
 //----------------------------------------------------------------------

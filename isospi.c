@@ -1,11 +1,11 @@
 //----------------------------------------------------------------------
-// Titel	:	IsoSPI.c
+// Titel	:	isospi.c
 //----------------------------------------------------------------------
 // Sprache	:	C
 // Datum	:	03.06.2022
-// Version	:	1.0
 // Autor	:	Diveturtle93
 // Projekt	:	LTC6811
+// Quelle	:
 //----------------------------------------------------------------------
 
 // Einfuegen der standard Include-Dateien
@@ -18,14 +18,19 @@
 #include "spi.h"
 //----------------------------------------------------------------------
 
-// Einfuegen der eigenen Include Dateien
+// Einfuegen der eigenen Include-Dateien
 //----------------------------------------------------------------------
-#include "LTC6811.h"
-#include "IsoSPI.h"
+#include "ltc6811.h"
+#include "isospi.h"
 #include "millis.h"
 //----------------------------------------------------------------------
 
-// Definiere Globale Variable
+// Variablen definieren
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+
+// Variablen einbinden
 //----------------------------------------------------------------------
 static IsoSpi_State IsoSpiState;											// Statusvariable Statemaschine
 uint32_t timeIsoSpiState;													// Time Variable fuer State
@@ -46,28 +51,35 @@ void set_IsoSpiState (IsoSpi_State newState)
 	switch (IsoSpiState)
 	{
 		case IsoIdle:
+		{
 			ITM_SendString("Idle\n");
 			break;
-
+		}
 		case IsoActive:
+		{
 			ITM_SendString("Active\n");
 			break;
-
+		}
 		case IsoReady:
+		{
 			ITM_SendString("Ready\n");
 			break;
-
+		}
 		case IsoGetReady:
+		{
 			ITM_SendString("GetReady\n");
 			break;
-
+		}
 		case IsoSleep:
+		{
 			ITM_SendString("Sleep\n");
 			break;
-
+		}
 		default:
+		{
 			ITM_SendString("#RED#FEHLER\n");
 			break;
+		}
 	}
 #endif
 }
@@ -83,18 +95,21 @@ void IsoSPI_statemaschine (void)
 			break;
 
 		case IsoGetReady:
+		{
 			if (millis() > (timeIsoSpiState + 1))
 			{
 				IsoSpiState = IsoReady;
 			}
 			break;
-
+		}
 		case IsoReady:
+		{
 			if (millis() > (timeIsoSpiState + 4))
 			{
 				IsoSpiState = IsoIdle;
 			}
 			break;
+		}
 
 		case IsoActive:
 			break;
@@ -132,16 +147,16 @@ void IsoSPI_wakeup (void)
 	// Wenn Statemaschine Idle ist, dann IsoSPI wecken
 	if (get_IsoSpiState() == IsoIdle)
 	{
-		for (uint8_t i = 0; i < LTC6811_DEVICES; i++)							// Wiederholen fuer Anzahl Slaves
+		for (uint8_t i = 0; i < LTC6811_DEVICES; i++)						// Wiederholen fuer Anzahl Slaves
 		{
 			// ISOCS einschalten
-			ISOCS_ENABLE();														// Chip-Select einschalten
+			ISOCS_ENABLE();													// Chip-Select einschalten
 
 			// Dummy Paket senden
-			HAL_SPI_Transmit(&hspi4, (uint8_t*) 0xAA, 1, 100);					// Chip wecken, isoSPI braucht Zeit bis ready
+			HAL_SPI_Transmit(&hspi4, (uint8_t*) 0xAA, 1, 100);				// Chip wecken, isoSPI braucht Zeit bis ready
 
 			// ISOCS ausschalten
-			ISOCS_DISABLE();													// Chip-Select ausschalten
+			ISOCS_DISABLE();												// Chip-Select ausschalten
 		}
 
 		// Setze Statemaschine auf GetReady

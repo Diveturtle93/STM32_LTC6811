@@ -1,11 +1,11 @@
 //----------------------------------------------------------------------
-// Titel	:	LTC1380.c
+// Titel	:	ltc1380.c
 //----------------------------------------------------------------------
 // Sprache	:	C
 // Datum	:	25.09.2020
-// Version	:	1.0
 // Autor	:	Diveturtle93
-// Projekt	:	LTC1380
+// Projekt	:	LTC6811
+// Quelle	:
 //----------------------------------------------------------------------
 
 // Einfuegen der standard Include-Dateien
@@ -18,10 +18,15 @@
 #include "main.h"
 //----------------------------------------------------------------------
 
-// Einfuegen der eigenen Include Dateien
+// Einfuegen der eigenen Include-Dateien
 //----------------------------------------------------------------------
+#include "ltc6811.h"
 #include "ltc1380.h"
-#include "BatteriemanagementSystem.h"
+//----------------------------------------------------------------------
+
+// Variablen definieren
+//----------------------------------------------------------------------
+
 //----------------------------------------------------------------------
 
 // Kanal auswaehlen
@@ -110,7 +115,7 @@ void ltc1380_off (uint8_t Address)
 	}
 
 	// LTC6811 beschreiben und ueber I2C uebertragen
-	ltc6811_write(WRCOMM, &data[0]);											// Daten in LTC6811 schreiben
+	ltc6811_write(WRCOMM, &data[0]);										// Daten in LTC6811 schreiben
 	ltc6811(STCOMM);														// Daten von LTC6811 an LTC1380 senden
 
 	// Debug Nachricht
@@ -128,7 +133,6 @@ void ltc1380_off (uint8_t Address)
 #endif
 }
 //----------------------------------------------------------------------
-
 
 // Alle Kanaele aller ICs ausschalten
 //----------------------------------------------------------------------
@@ -162,7 +166,7 @@ void ltc1380_alloff (void)
 		}
 
 		// LTC6811 beschreiben und ueber I2C uebertragen
-		ltc6811_write(WRCOMM, &data[0]);										// Daten in LTC6811 schreiben
+		ltc6811_write(WRCOMM, &data[0]);									// Daten in LTC6811 schreiben
 		ltc6811(STCOMM);													// Daten von LTC6811 an LTC1380 senden
 
 		// Debug Nachricht

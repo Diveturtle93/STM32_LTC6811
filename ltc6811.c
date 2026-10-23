@@ -1,11 +1,11 @@
 //----------------------------------------------------------------------
-// Titel	:	LTC6811.c
+// Titel	:	ltc6811.c
 //----------------------------------------------------------------------
 // Sprache	:	C
 // Datum	:	25.09.2020
-// Version	:	1.0
 // Autor	:	Diveturtle93
 // Projekt	:	LTC6811
+// Quelle	:
 //----------------------------------------------------------------------
 
 // Einfuegen der standard Include-Dateien
@@ -18,30 +18,23 @@
 #include "spi.h"
 //----------------------------------------------------------------------
 
-// Einfuegen der eigenen Include Dateien
+// Einfuegen der eigenen Include-Dateien
 //----------------------------------------------------------------------
 #include "ltc6811.h"
-#include "IsoSPI.h"
+#include "isospi.h"
 #include "error.h"
 #include "millis.h"
 #include "my_math.h"
 //----------------------------------------------------------------------
 
-// Definiere Zellenarray
-//----------------------------------------------------------------------
-ltc6811_configuration_tag ltc6811_Conf;										// LTC6811 Configurations Register
-ltc6811_balancing_tag ltc6811_balance[LTC6811_DEVICES];						// LTC6811 Balancing Register
-//----------------------------------------------------------------------
-
-// Definiere Globale Variable
+// Variablen definieren
 //----------------------------------------------------------------------
 static LTC6811_State Ltc6811State;											// Statusvariable Statemaschine
 static uint32_t timeLtc6811State;											// Time Variable fuer State
 uint16_t samplingMode = MD73;												// Sampling Mode fuer LTC6811 Messung
 static uint16_t error_readtimeout = 0x0001;									// Fehler fuer Timeout, default alle fehlerhaft
 //----------------------------------------------------------------------
-
-// Pec Lookuptabelle definieren
+// Pec Lookuptabelle definieren,  CRC-15 mit Polynom 0x4599 (Datasheet ltc6811 Page 76)
 //----------------------------------------------------------------------
 const uint16_t pec15Table[256] = {
 	0x0000,	0xC599,	0xCEAB,	0x0B32,	0xD8CF,	0x1D56,	0x1664,	0xD3FD,
@@ -79,6 +72,12 @@ const uint16_t pec15Table[256] = {
 };
 //----------------------------------------------------------------------
 
+// Variablen einbinden
+//----------------------------------------------------------------------
+ltc6811_configuration_tag ltc6811_Conf;										// LTC6811 Configurations Register
+ltc6811_balancing_tag ltc6811_balance[LTC6811_DEVICES];						// LTC6811 Balancing Register
+//----------------------------------------------------------------------
+
 // Setze Statemaschine von LTC6811
 //----------------------------------------------------------------------
 void set_ltc6811_state (LTC6811_State newState)
@@ -94,36 +93,45 @@ void set_ltc6811_state (LTC6811_State newState)
 	switch (Ltc6811State)
 	{
 		case LTCStandby:
+		{
 			ITM_SendString("Standby\n");
 			break;
-
+		}
 		case LTCMeasure:
+		{
 			ITM_SendString("Measure\n");
 			break;
-
+		}
 		case LTCRefup:
+		{
 			ITM_SendString("Refup\n");
 			break;
-
+		}
 		case LTCSetRefup:
+		{
 			ITM_SendString("SetRefup\n");
 			break;
-
+		}
 		case LTCWakeup:
+		{
 			ITM_SendString("Wakeup\n");
 			break;
-
+		}
 		case LTCExtendedBalancing:
+		{
 			ITM_SendString("Extended Balancing\n");
 			break;
-
+		}
 		case LTCSleep:
+		{
 			ITM_SendString("Sleep\n");
 			break;
-
+		}
 		default:
+		{
 			ITM_SendString("#RED#LTC Error\n");
 			break;
+		}
 	}
 #endif
 }
@@ -134,7 +142,7 @@ void set_ltc6811_state (LTC6811_State newState)
 void ltc6811_statemaschine (void)
 {
 	// Messzeit feststellen, Messzeit immer fuer alle Zellen + GPIOs (Das ist eine Abschaetzung zur sicheren Seite)
-	uint32_t measurementDuration; // in us
+	uint32_t measurementDuration;											// in us
 
 	switch (Ltc6811State)
 	{
@@ -142,6 +150,7 @@ void ltc6811_statemaschine (void)
 			break;
 
 		case LTCStandby:
+		{
 			if (millis() > (timeLtc6811State + LTC6811_TIMEOUT))			// ms
 			{
 				// 1.8s ist in diesem Zustand vergangen, Watchdog koennte ausgeloest haben (t_sleep)
@@ -154,8 +163,9 @@ void ltc6811_statemaschine (void)
 				set_ltc6811_state(LTCRefup);
 			}
 			break;
-
+		}
 		case LTCRefup:
+		{
 			if (ltc6811_Conf.REFON == 1)
 			{
 				if (millis() > (timeLtc6811State + LTC6811_TIMEOUT))		// ms
@@ -169,36 +179,43 @@ void ltc6811_statemaschine (void)
 				set_ltc6811_state(LTCStandby);
 			}
 			break;
-
+		}
 		case LTCMeasure:
+		{
 			if (ltc6811_Conf.ADCOPT == 0)
 			{
 				switch (samplingMode)
 				{
 					case MD2714:
-						//measurementDuration = 1503;							// us
+					{
+						// measurementDuration = 1503;						// us
 						measurementDuration = 2;							// ms
 						break;
-
+					}
 					case MD73:
-						//measurementDuration = 3133;							// us
+					{
+						// measurementDuration = 3133;						// us
 						measurementDuration = 4;							// ms
 						break;
-
+					}
 					case MD262:
-						//measurementDuration = 268442;						// us
+					{
+						// measurementDuration = 268442;					// us
 						measurementDuration = 269;							// ms
 						break;
-
+					}
 					case MD1422:
-						//measurementDuration = 17096;						// us
+					{
+						// measurementDuration = 17096;						// us
 						measurementDuration = 17;							// ms
 						break;
-
+					}
 					default:
-						//measurementDuration = 300000;						// us Dummy Wert
+					{
+						// measurementDuration = 300000;					// us Dummy Wert
 						measurementDuration = 300;							// ms
 						break;
+					}
 				}
 			}
 			else if (ltc6811_Conf.ADCOPT == 1)
@@ -206,29 +223,35 @@ void ltc6811_statemaschine (void)
 				switch (samplingMode)
 				{
 					case MD2714:
-						//measurementDuration = 1736;							// us
+					{
+						// measurementDuration = 1736;						// us
 						measurementDuration = 2;							// ms
 						break;
-
+					}
 					case MD73:
-						//measurementDuration = 4064;							// us
+					{
+						// measurementDuration = 4064;						// us
 						measurementDuration = 4;							// ms
 						break;
-
+					}
 					case MD262:
-						//measurementDuration = 9648;							// us
+					{
+						// measurementDuration = 9648;						// us
 						measurementDuration = 10;							// ms
 						break;
-
+					}
 					case MD1422:
-						//measurementDuration = 5925;							// us
+					{
+						// measurementDuration = 5925;						// us
 						measurementDuration = 6;							// ms
 						break;
-
+					}
 					default:
-						//measurementDuration = 300000;						// us Dummy Wert
+					{
+						// measurementDuration = 300000;					// us Dummy Wert
 						measurementDuration = 300;							// ms
 						break;
+					}
 				}
 			}
 			else
@@ -254,23 +277,25 @@ void ltc6811_statemaschine (void)
 			}
 
 			break;
-
+		}
 		case LTCWakeup:
+		{
 			// 500us (t_Wakeup) warten bis Chip aufgewacht ist
 			if (millis() > (timeLtc6811State + 1))							// ms
 			{
 				set_ltc6811_state(LTCStandby);
 			}
 			break;
-
+		}
 		case LTCSetRefup:
+		{
 			// 5ms (t_Refup) warten bis Referenz eingeschaltet ist
 			if (millis() > (timeLtc6811State + 5))							// ms
 			{
 				set_ltc6811_state(LTCRefup);
 			}
 			break;
-
+		}
 		default:
 			break;
 	}
@@ -540,7 +565,7 @@ uint16_t peccommand (uint16_t command)
 
 // Pec kalculieren (Datasheet ltc6811 Page 76, Datasheet ltc6811 Page 72)
 //----------------------------------------------------------------------
-uint16_t peclookup (uint8_t len,	uint8_t *data)								// len = Anzahl Byte, data = Daten fuer die Pec ausgewaehlt wird
+uint16_t peclookup (uint8_t len, uint8_t *data)								// len = Anzahl Byte, data = Daten fuer die Pec ausgewaehlt wird
 {
 	// Variable definieren
 	uint16_t remainder, addr;												// remainder = Zwischenspeicher Pec, addr = Zwischenspeicher Addresse
@@ -552,8 +577,11 @@ uint16_t peclookup (uint8_t len,	uint8_t *data)								// len = Anzahl Byte, dat
 		// Kalkuliere Pec Anhand der Lookuptabelle
 		addr = ((remainder >> 7) ^ data[i]) & 0xFF;							// Tabellenaddresse berechnen
 		remainder = (remainder << 8) ^ pec15Table[addr];					// Pec berechnen
-//		uartTransmitNumber(data[i], 16);
-//		uartTransmit("\n", 1);
+
+#ifdef DEBUG_LTC6811_PEC
+		uartTransmitNumber(data[i], 16);
+		uartTransmit("\n", 1);
+#endif
 	}
 	
 	// Pec zurueckgeben
@@ -561,9 +589,7 @@ uint16_t peclookup (uint8_t len,	uint8_t *data)								// len = Anzahl Byte, dat
 }
 //----------------------------------------------------------------------
 
-/*
-//----------------------------------------------------------------------
-uint16_t test[256];
+#if LTC6811_PEC_LOOKUP == 1
 // CRC Tabelle berechnen (Datasheet ltc6811 Page 76)
 //----------------------------------------------------------------------
 void init_crc (void)
@@ -588,7 +614,8 @@ void init_crc (void)
 		test[i] = remainder&0xFFFF;
 	}
 }
-//----------------------------------------------------------------------*/
+#endif
+//----------------------------------------------------------------------
 
 // Validiere Pec von Daten
 //----------------------------------------------------------------------
@@ -901,52 +928,68 @@ bool ltc6811_test (uint16_t command)
 				case 0:
 				case 1:
 				case 2:
+				{
 					tmp = ((tmp_data[j*64 + i*2 + 1] << 8) | tmp_data[j*64 + i*2]);		// Register CVA umwandeln
 					break;
+				}
 				// Register CVB (8 - 33, 14 & 15)
 				case 3:
 				case 4:
 				case 5:
+				{
 					tmp = ((tmp_data[j*64 + i*2 + 3] << 8) | tmp_data[j*64 + i*2 + 2]);	// Register CVB umwandeln
 					break;
+				}
 				// Register CVC (16 - 21, 22 & 23)
 				case 6:
 				case 7:
 				case 8:
+				{
 					tmp = ((tmp_data[j*64 + (i + 2)*2 + 1] << 8) | tmp_data[j*64 + (i + 2)*2]);// Register CVC umwandeln
 					break;
+				}
 				// Register CVD (24 - 29, 30 & 31)
 				case 9:
 				case 10:
 				case 11:
+				{
 					tmp = ((tmp_data[j*64 + (i + 2)*2 + 3] << 8) | tmp_data[j*64 + (i + 2)*2 + 2]);// Register CVD umwandeln
 					break;
+				}
 				// Register AUXA (32 - 37, 38 & 39)
 				case 12:
 				case 13:
 				case 14:
+				{
 					tmp = ((tmp_data[j*64 + (i + 4)*2 + 1] << 8) | tmp_data[j*64 + (i + 4)*2]);// Register AUXA umwandeln
 					break;
+				}
 				// Register AUXB (40 - 45, 46 & 47)
 				case 15:
 				case 16:
 				case 17:
+				{
 					tmp = ((tmp_data[j*64 + (i + 4)*2 + 3] << 8) | tmp_data[j*64 + (i + 4)*2 + 2]);// Register AUXB umwandeln
 					break;
+				}
 				// Register STATA (48 - 53, 54 & 65)
 				case 18:
 				case 19:
 				case 20:
+				{
 					tmp = ((tmp_data[j*64 + (i + 6)*2 + 1] << 8) | tmp_data[j*64 + (i + 6)*2]);// Register STATA umwandeln
 					// TODO: Testen warum zweites Device in der Chain fehler wirft
 					tmp = test_pattern;
 					break;
+				}
 				// Register STATB (56 & 57, 58 - 63)
 				case 21:
+				{
 					tmp = ((tmp_data[j*64 + (i + 6)*2 + 3] << 8) | tmp_data[j*64 + (i + 6)*2 + 2]);// Register STATB umwandeln
 					// TODO: Testen warum zweites Device in der Chain fehler wirft
 					tmp = test_pattern;
 					break;
+				}
 				// Kein Register
 				default:
 					break;
@@ -1031,7 +1074,7 @@ bool ltc6811_diagn (void)
 	// Command senden
 	ltc6811(DIAGN);															// Multiplexer Check
 
-	// Verzoegerungszeit 10ms, DIAG Befehl braucht ca. 400µs bis 4ms
+	// Verzoegerungszeit 10ms, DIAG Befehl braucht ca. 400us bis 4ms
 	HAL_Delay(5);
 
 	// Lese Register
@@ -1105,35 +1148,47 @@ bool ltc6811_openwire (void)
 			{
 				// Leitung C0; Zelle 1
 				case 0:
+				{
 					openwire[j*13 + i] = ((pullup[j*32 + 1] << 8) + pullup[j*32]);
 					break;
+				}
 				// Leitungen C1, C2; Zelle 1/2, 2/3
 				case 1:
 				case 2:
+				{
 					openwire[j*13 + i] = getDifference(((pullup[j*32 + i*2 + 1] << 8) + pullup[j*32 + i*2]), ((pulldown[j*32 + i*2 + 1] << 8) + pulldown[j*32 + i*2]));
 					break;
+				}
 				// Leitungen C3, C4, C5; Zelle 3/4 4/5, 5/6
 				case 3:
 				case 4:
 				case 5:
+				{
 					openwire[j*13 + i] = getDifference(((pullup[j*32 + i*2 + 3] << 8) + pullup[j*32 + i*2 + 2]), ((pulldown[j*32 + i*2 + 3] << 8) + pulldown[j*32 + i*2 + 2]));
 					break;
+				}
 				// Leitungen C6, C7, C8; Zelle 6/7, 7/8, 8/9
 				case 6:
 				case 7:
 				case 8:
+				{
 					openwire[j*13 + i] = getDifference(((pullup[j*32 + i*2 + 5] << 8) + pullup[j*32 + i*2 + 4]), ((pulldown[j*32 + i*2 + 5] << 8) + pulldown[j*32 + i*2 + 4]));
 					break;
+				}
 				// Leitungen C9, C10, C11; Zelle 9/10, 10/11, 11/12
 				case 9:
 				case 10:
 				case 11:
+				{
 					openwire[j*13 + i] = getDifference(((pullup[j*32 + i*2 + 7] << 8) + pullup[j*32 + i*2 + 6]), ((pulldown[j*32 + i*2 + 7] << 8) + pulldown[j*32 + i*2 + 6]));
 					break;
+				}
 				// Leitung C12, Zelle 12
 				case 12:
+				{
 					openwire[j*13 + i] = ((pulldown[j*32 + 29] << 8) + pulldown[j*32 + 28]);
 					break;
+				}
 				default:
 					break;
 			}
@@ -1240,7 +1295,7 @@ uint16_t ltc6811_poll (void)
 	ITM_SendChar('\n');
 #endif
 
-	return(counter);
+	return counter;
 }
 //----------------------------------------------------------------------
 
@@ -1361,26 +1416,34 @@ bool ltc6811_validate_balance (void)
 				case 0:
 				case 1:
 				case 2:
+				{
 					result[j*12 + i] = getDifference(((cell[j*32 + i*2 + 1] << 8) + cell[j*32 + i*2]), ((celldchg[j*32 + i*2 + 1] << 8) + celldchg[j*32 + i*2]));
 					break;
+				}
 				// Schalter 4 - 6
 				case 3:
 				case 4:
 				case 5:
+				{
 					result[j*12 + i] = getDifference(((cell[j*32 + i*2 + 3] << 8) + cell[j*32 + i*2 + 2]), ((celldchg[j*32 + i*2 + 3] << 8) + celldchg[j*32 + i*2 + 2]));
 					break;
+				}
 				// Schalter 7 - 9
 				case 6:
 				case 7:
 				case 8:
+				{
 					result[j*12 + i] = getDifference(((cell[j*32 + i*2 + 5] << 8) + cell[j*32 + i*2 + 4]), ((celldchg[j*32 + i*2 + 5] << 8) + celldchg[j*32 + i*2 + 4]));
 					break;
+				}
 				// Schalter 10 - 12
 				case 9:
 				case 10:
 				case 11:
+				{
 					result[j*12 + i] = getDifference(((cell[j*32 + i*2 + 7] << 8) + cell[j*32 + i*2 + 6]), ((celldchg[j*32 + i*2 + 7] << 8) + celldchg[j*32 + i*2 + 6]));
 					break;
+				}
 				default:
 					break;
 			}
